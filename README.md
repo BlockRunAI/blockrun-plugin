@@ -33,7 +33,7 @@ blockrun-plugin/
 ## Try it locally
 
 ```bash
-claude --plugin-dir /Users/andy/Desktop/vscode/BlockRun/blockrun-plugin
+claude --plugin-dir /path/to/blockrun-plugin
 ```
 
 Then ask Claude to generate an image — you'll get a spend-confirmation prompt

@@ -1,15 +1,11 @@
 {
-  "//": "Bundled BlockRun MCP server (media profile). For the prototype this points at the local build; once @blockrun/mcp is published with --profile support, swap to: npx -y @blockrun/mcp@latest --profile media",
+  "//": "Bundled BlockRun MCP server, media profile. Requires @blockrun/mcp published with --profile support. For local development against an unpublished build, override with: claude --plugin-dir <path> after editing this to a local node path.",
   "mcpServers": {
     "blockrun": {
       "type": "stdio",
-      "command": "node",
-      "args": [
-        "/Users/andy/Desktop/vscode/BlockRun/blockrun-mcp/dist/index.js",
-        "--profile",
-        "media"
-      ],
-      "env": {}
+      "command": "npx",
+      "args": ["-y", "@blockrun/mcp@latest", "--profile", "media"],
+      "env": { "BLOCKRUN_INLINE_IMAGES": "1" }
     }
   }
 }
