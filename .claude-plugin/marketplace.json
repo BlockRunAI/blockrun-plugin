@@ -1,8 +1,8 @@
 {
-  "name": "blockrun-local",
-  "owner": { "name": "BlockRun" },
+  "name": "blockrun",
+  "owner": { "name": "BlockRun", "url": "https://blockrun.ai" },
   "metadata": {
-    "description": "Local marketplace for the BlockRun media plugin (prototype)."
+    "description": "BlockRun plugins for Claude Code — media generation tools with spend controls."
   },
   "plugins": [
     {
