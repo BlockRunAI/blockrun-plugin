@@ -1,0 +1,14 @@
+{
+  "name": "blockrun-local",
+  "owner": { "name": "BlockRun" },
+  "metadata": {
+    "description": "Local marketplace for the BlockRun media plugin (prototype)."
+  },
+  "plugins": [
+    {
+      "name": "blockrun-media",
+      "source": "./",
+      "description": "BlockRun media tools with spend-confirmation, cost meter, and status line."
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "//": "Plugin defaults. Free tools are pre-allowed so balance checks / model lookups never prompt; paid tools fall through to the PreToolUse spend-gate. The statusLine is set here, but if the client ignores plugin-level statusLine, copy it into your user settings.json (see README).",
+  "permissions": {
+    "allow": [
+      "mcp__blockrun__blockrun_wallet",
+      "mcp__blockrun__blockrun_models"
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "node \"${CLAUDE_PLUGIN_ROOT}/statusline/balance.js\""
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "blockrun-media",
+  "version": "0.1.0",
+  "description": "BlockRun media tools (image/video/audio) with spend-confirmation, a running cost meter, and a balance status line. Prototype.",
+  "author": { "name": "BlockRun" },
+  "homepage": "https://blockrun.ai",
+  "license": "MIT"
+}
