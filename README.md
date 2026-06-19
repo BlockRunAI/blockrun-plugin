@@ -23,11 +23,14 @@ blockrun-plugin/
 ├── settings.json                pre-allow free tools + statusLine
 ├── hooks/
 │   ├── hooks.json               Pre/PostToolUse wiring
-│   ├── spend-gate.js            estimate cost → ask before charge
-│   └── spend-tally.js           record session spend → receipt
-├── statusline/balance.js        bottom-bar session spend
-├── lib/estimate.js              shared per-call cost estimator
-└── commands/{balance,report}.md slash commands
+│   ├── spend-gate.js            confirm spend + soft budget cap
+│   └── spend-tally.js           real session spend (ledger) → receipt
+├── statusline/balance.js        bottom-bar session spend (real)
+├── scripts/insights.js          spend report from the settlement ledger
+├── lib/
+│   ├── estimate.js              per-call cost estimate + savings-vs-flagship
+│   └── ledger.js                reads ~/.blockrun/cost_log.jsonl (real spend)
+└── commands/{balance,report,insights}.md  slash commands
 ```
 
 ## Try it locally
@@ -39,34 +42,35 @@ claude --plugin-dir /path/to/blockrun-plugin
 Then ask Claude to generate an image — you'll get a spend-confirmation prompt
 with the estimate, a receipt afterward, and the status line updating.
 
+## Features
+
+- **Spend confirmation** — `spend-gate` (PreToolUse) asks before a paid call, showing
+  the estimated cost and real session-so-far. Free tools run silently.
+- **Real-ledger spend** — `spend-tally` + status line read the SDK's settlement ledger
+  (`~/.blockrun/cost_log.jsonl`), so the per-call receipt and `🪙 session` total are the
+  **actual** amounts settled, across all tools, not estimates.
+- **Savings narrative** — receipts note how much a cheaper model saved vs the flagship,
+  e.g. `saved ~$0.0650 vs gpt-image-2`.
+- **Soft budget cap** — set `BLOCKRUN_SESSION_CAP`; once real session spend would exceed
+  it, the gate returns a friendly refusal the model adapts to (try a cheaper model),
+  not a hard error.
+- **`/blockrun-media:insights`** — totals (today/7d/30d/all-time), by-endpoint breakdown,
+  and monthly/yearly projection from the ledger. Plus `/balance` and `/report`.
+
 ## Knobs (env)
 
-- `BLOCKRUN_ASK_THRESHOLD` (default `0`) — auto-run paid calls at/under this USD
-  amount without asking. e.g. `0.02` lets cheap drafts through.
-- `BLOCKRUN_SESSION_CAP` (default `5`) — warn in the prompt once estimated session
-  spend would exceed this.
+- `BLOCKRUN_ASK_THRESHOLD` (default `0`) — auto-run paid calls at/under this USD amount
+  without asking. e.g. `0.02` lets cheap drafts through.
+- `BLOCKRUN_SESSION_CAP` (default unset = no cap) — soft refusal once real session spend
+  would exceed this USD amount.
+- `BLOCKRUN_INLINE_IMAGES=1` — return inline image previews (set in `.mcp.json`).
 
 ## Notes / limits
 
-- Cost figures are **estimates** to inform the user; the MCP/gateway settles the
-  real amount. Tune `lib/estimate.js` as pricing changes.
-- The `.mcp.json` points at the local MCP build for now. Once `@blockrun/mcp` ships
-  `--profile`, switch to `npx -y @blockrun/mcp@latest --profile media`.
-- If your client ignores a plugin-level `statusLine`, copy the `statusLine` block
-  from `settings.json` into your user `settings.json` (replace `${CLAUDE_PLUGIN_ROOT}`
-  with the absolute plugin path).
-
-## Roadmap
-
-Planned (not yet implemented):
-
-- **Savings narrative** — show how much a call saved vs the flagship model in the
-  cost line / report, e.g. `cogview-4 $0.015 (saved ~$0.065 vs gpt-image-2)`.
-  Mirrors Franklin's "saved vs Opus baseline" framing — good for conveying value.
-- **Per-task budget cells** — beyond the session cap, let a user set a budget per
-  task/campaign (e.g. "3 images, $0.30 cap"); when a call would exceed it, return
-  a friendly message the model reads and adapts to (try a cheaper model) instead of
-  a hard error. Mirrors Franklin's per-content budget + soft-refusal pattern.
-- **Real-ledger costs** — read the SDK's `~/.blockrun/cost_log.jsonl` settlement
-  ledger for exact, all-tool, cross-session spend instead of local estimates.
-- **/insights** — per-endpoint breakdown + daily/monthly projection from the ledger.
+- Spend figures are the **real** settled amounts (from `~/.blockrun/cost_log.jsonl`); the
+  per-call estimate in `lib/estimate.js` is only used for the pre-charge confirmation.
+- The published `.mcp.json` uses `npx -y @blockrun/mcp@latest --profile media`. For local
+  development against an unpublished build, point it at a local `node …/dist/index.js`.
+- If your client ignores a plugin-level `statusLine`, copy the `statusLine` block from
+  `settings.json` into your user `settings.json` (replace `${CLAUDE_PLUGIN_ROOT}` with the
+  absolute plugin path). statusLine renders in the CLI; some clients don't show it.

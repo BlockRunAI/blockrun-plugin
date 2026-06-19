@@ -1,39 +1,30 @@
 #!/usr/bin/env node
 // PreToolUse gate for BlockRun tools.
 //
-// Free tools (wallet, models, list/voices actions) run silently. Paid tools
-// return permissionDecision:"ask" with a cost estimate so the user confirms
-// the spend before any USDC leaves the wallet — the core "ask before charge"
-// UX. A per-session soft cap (BLOCKRUN_SESSION_CAP, default $5) is surfaced
-// in the prompt once cumulative estimated spend approaches it.
+// 1. Captures the session baseline (ledger total before the first BlockRun
+//    charge) so the tally/status line can report REAL session spend.
+// 2. Soft budget cap (Franklin pattern): if real session spend + this call would
+//    exceed BLOCKRUN_SESSION_CAP, return a friendly deny the model can adapt to
+//    (try a cheaper model) — not a hard error. Cap is opt-in (unset = no cap).
+// 3. Otherwise asks the user to confirm the spend (free/under-threshold runs
+//    silently). On clients that honor PreToolUse decisions the reason shows the
+//    cost; elsewhere it falls back to the native prompt.
 
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { estimate } = require("../lib/estimate.js");
+const ledger = require("../lib/ledger.js");
 
-// Tools whose estimated cost is at/below this auto-run without a prompt.
-// Default 0 → confirm on ANY paid call. Raise (e.g. 0.02) to let cheap
-// drafts through silently.
 const ASK_THRESHOLD = Number(process.env.BLOCKRUN_ASK_THRESHOLD || 0);
-const SESSION_CAP = Number(process.env.BLOCKRUN_SESSION_CAP || 5);
+const SESSION_CAP = Number(process.env.BLOCKRUN_SESSION_CAP || 0); // 0 = no cap
 
 function readStdin() {
   try { return JSON.parse(fs.readFileSync(0, "utf8")); } catch { return {}; }
 }
-function sessionSpent(sessionId) {
-  try {
-    const f = path.join(os.tmpdir(), "blockrun-cc", `${sessionId}.json`);
-    return JSON.parse(fs.readFileSync(f, "utf8")).usd || 0;
-  } catch { return 0; }
-}
 function emit(decision, reason) {
   process.stdout.write(JSON.stringify({
-    hookSpecificOutput: {
-      hookEventName: "PreToolUse",
-      permissionDecision: decision,
-      permissionDecisionReason: reason,
-    },
+    hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: decision, permissionDecisionReason: reason },
   }));
   process.exit(0);
 }
@@ -41,17 +32,27 @@ function emit(decision, reason) {
 const data = readStdin();
 const { usd, label } = estimate(data.tool_name, data.tool_input || {});
 
-// Free / under threshold → auto-approve so balance checks etc. never prompt.
-if (usd <= ASK_THRESHOLD) emit("allow", `${label} — no charge`);
-
-const spent = sessionSpent(data.session_id);
-const after = spent + usd;
-const lines = [
-  `💸 **BlockRun spend** — \`${label}\``,
-  `Estimated: **$${usd.toFixed(4)}**   ·   session so far: $${spent.toFixed(4)} → $${after.toFixed(4)}`,
-];
-if (after > SESSION_CAP) {
-  lines.push(`⚠️ This exceeds the session cap of $${SESSION_CAP.toFixed(2)}.`);
+// Baseline = ledger total before the first BlockRun call this session.
+const dir = path.join(os.tmpdir(), "blockrun-cc");
+const file = path.join(dir, `${data.session_id || "default"}.json`);
+let state = {};
+try { state = JSON.parse(fs.readFileSync(file, "utf8")); } catch { /* first call */ }
+if (typeof state.baseline !== "number") {
+  state.baseline = ledger.totalAll();
+  try { fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(file, JSON.stringify(state)); } catch { /* best effort */ }
 }
-lines.push(`Approve this charge?`);
-emit("ask", lines.join("\n"));
+const session = Math.max(0, ledger.totalAll() - state.baseline);
+
+// Soft budget refusal.
+if (SESSION_CAP > 0 && usd > 0 && session + usd > SESSION_CAP) {
+  emit("deny",
+    `BlockRun session budget reached: $${session.toFixed(4)} spent + $${usd.toFixed(4)} for this call would exceed the $${SESSION_CAP.toFixed(2)} cap. ` +
+    `Use a cheaper model (e.g. zai/cogview-4 for drafts), skip this call, or raise BLOCKRUN_SESSION_CAP.`);
+}
+
+if (usd <= ASK_THRESHOLD) process.exit(0); // free / under threshold → allow silently
+
+emit("ask",
+  `💸 **BlockRun spend** — \`${label}\`\n` +
+  `Estimated: **$${usd.toFixed(4)}**   ·   session so far: $${session.toFixed(4)}\n` +
+  `Approve this charge?`);
