@@ -55,3 +55,18 @@ with the estimate, a receipt afterward, and the status line updating.
 - If your client ignores a plugin-level `statusLine`, copy the `statusLine` block
   from `settings.json` into your user `settings.json` (replace `${CLAUDE_PLUGIN_ROOT}`
   with the absolute plugin path).
+
+## Roadmap
+
+Planned (not yet implemented):
+
+- **Savings narrative** — show how much a call saved vs the flagship model in the
+  cost line / report, e.g. `cogview-4 $0.015 (saved ~$0.065 vs gpt-image-2)`.
+  Mirrors Franklin's "saved vs Opus baseline" framing — good for conveying value.
+- **Per-task budget cells** — beyond the session cap, let a user set a budget per
+  task/campaign (e.g. "3 images, $0.30 cap"); when a call would exceed it, return
+  a friendly message the model reads and adapts to (try a cheaper model) instead of
+  a hard error. Mirrors Franklin's per-content budget + soft-refusal pattern.
+- **Real-ledger costs** — read the SDK's `~/.blockrun/cost_log.jsonl` settlement
+  ledger for exact, all-tool, cross-session spend instead of local estimates.
+- **/insights** — per-endpoint breakdown + daily/monthly projection from the ledger.
