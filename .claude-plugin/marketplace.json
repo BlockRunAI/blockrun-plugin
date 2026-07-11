@@ -1,12 +1,15 @@
 {
   "name": "blockrun",
-  "owner": { "name": "BlockRun", "url": "https://blockrun.ai" },
+  "owner": {
+    "name": "BlockRun",
+    "url": "https://blockrun.ai"
+  },
   "metadata": {
-    "description": "BlockRun plugins for Claude Code — media generation tools with spend controls."
+    "description": "BlockRun plugins for Claude Code \u2014 media generation tools with spend controls."
   },
   "plugins": [
     {
-      "name": "blockrun-media",
+      "name": "blockrun-media-cc",
       "source": "./",
       "description": "BlockRun media tools with spend-confirmation, cost meter, and status line."
     }
