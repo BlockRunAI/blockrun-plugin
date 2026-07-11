@@ -9,7 +9,7 @@
   },
   "plugins": [
     {
-      "name": "blockrun-media-cc",
+      "name": "blockrun-media",
       "source": "./",
       "description": "BlockRun media tools with spend-confirmation, cost meter, and status line."
     }
