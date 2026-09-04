@@ -1,7 +1,7 @@
 {
   "name": "blockrun-media",
   "version": "0.1.1",
-  "description": "BlockRun media tools (image/video/audio) with spend-confirmation, a running cost meter, and a balance status line. Prototype.",
+  "description": "BlockRun account or wallet media tools with spend confirmation and billing guidance.",
   "author": {
     "name": "BlockRun"
   },
