@@ -33,6 +33,12 @@ blockrun-plugin/
 └── commands/{balance,report,insights}.md  slash commands
 ```
 
+## Account API setup
+
+Register at [user.blockrun.ai](https://user.blockrun.ai), create a key at [API Keys](https://user.blockrun.ai/dashboard/keys), and add [Credits](https://user.blockrun.ai/dashboard/credits). Set `BLOCKRUN_API_KEY` before launching Claude Code; the bundled MCP inherits it and `.mcp.json` never stores it.
+
+Account mode needs no wallet once the MCP release containing [MCP PR #136](https://github.com/BlockRunAI/blockrun-mcp/pull/136) is published. Until then, point the MCP command at that exact local review build. Wallet mode remains available through x402 on Solana or Base, with Solana first for new users. The local ledger/status line contains wallet settlements only; account usage belongs to the credits portal. Estimates and confirmation still apply before account calls.
+
 ## Try it locally
 
 ```bash

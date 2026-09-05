@@ -5,13 +5,13 @@
     "url": "https://blockrun.ai"
   },
   "metadata": {
-    "description": "BlockRun plugins for Claude Code \u2014 media generation tools with spend controls."
+    "description": "BlockRun plugins for account or wallet media generation."
   },
   "plugins": [
     {
       "name": "blockrun-media",
       "source": "./",
-      "description": "BlockRun media tools with spend-confirmation, cost meter, and status line."
+      "description": "BlockRun account or wallet media tools with spend confirmation."
     }
   ]
 }
